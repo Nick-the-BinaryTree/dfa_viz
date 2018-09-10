@@ -2,6 +2,8 @@ const CHAR_OFFSET = -3;
 const LINE_OFFSET = 8;
 const PREV_STATE = 'Backspace';
 const RADIUS_SCALE_FACTOR = 5;
+const WINDOW_PADDING = 30;
+const WINDOW_VERTICAL_PERCENTAGE_USED = .9;
 
 const colors = d3.scaleOrdinal(d3.schemeCategory20c);
 let curNodeID = 0, edgeLabels, edgePaths, link, node, simulation, svg;
@@ -9,26 +11,10 @@ let curNodeID = 0, edgeLabels, edgePaths, link, node, simulation, svg;
 const graph = {
   nodes: [
     {
-      "data": "ε",
-      "curState": true,
+      "id": "0",
+      "curState": false,
       "endState": false,
-      "id": 0
     },
-    // {
-    //   "data": "A",
-    //   "endState": false,
-    //   "id": 1
-    // },
-    // {
-    //   "data": "AB",
-    //   "endState": false,
-    //   "id": 2
-    // },
-    // {
-    //   "data": "ABC",
-    //   "endState": true,
-    //   "id": 3
-    // },
   ],
   edges: [
     // {
@@ -65,7 +51,37 @@ const graph = {
 }
 
 window.onload = () => {
+  initNodeCountDropdown();
   initSim();
+}
+
+function initNodeCountDropdown() {
+  const dropdown = document.getElementById('nodeCountDropdown');
+
+  for (let i=1; i <= 100; i++) {
+    const newOption = document.createElement("OPTION");
+    const newOptionText = document.createTextNode(i);
+    newOption.appendChild(newOptionText);
+
+    dropdown.appendChild(newOption);
+  }
+
+  dropdown.onchange = changeNodeCount;
+}
+
+function changeNodeCount(newCount) {
+  newNodes = [];
+
+  for (let i=0; i<newCount.target.value; i++) {
+    newNodes.push({
+      "id": ""+i,
+      "curState": false,
+      "endState": false,
+    });
+  }
+
+  graph.nodes = newNodes;
+  updateNodes(graph.nodes, true);
 }
 
 function initSim() {
@@ -92,10 +108,54 @@ function initSim() {
     .force("charge", d3.forceManyBody().strength(-200))
     .force("center", d3.forceCenter(window.innerWidth/2, window.innerHeight/2));
 
-  update(graph.nodes, graph.edges);
+  updateNodes(graph.nodes);
 }
 
-function update(nodes, links) {
+function updateNodes(nodes, isInitialSet=false) {
+  if (isInitialSet) {
+    svg.selectAll(".node").remove();
+  }
+
+  node = svg.selectAll(".node")
+    .data(nodes);
+
+  node.selectAll('circle')
+    .classed("highlight", d => d.curState)
+    .classed("endState", d => d.endState);
+
+  const nodeEnter = node.enter()
+    .append("g")
+    .attr("class", "node")
+    .call(d3.drag()
+      .on("start", dragstarted)
+      .on("drag", dragged)
+      .on("end", dragended)
+    );
+
+  nodeEnter.append("circle")
+    .attr("r", (d => _generateNodeSize(d.id)))
+    .style("fill", (d, i) => colors(i));
+
+  nodeEnter.append("text")
+    .attrs({
+      'dx': d => d.id.length*CHAR_OFFSET,
+      'dy': -CHAR_OFFSET,
+      'fill': '#000',
+      'font-size': 14,
+      'stroke': 'none'
+    })
+    .text(d => d.id);
+
+  node = nodeEnter.merge(node);
+
+  simulation
+    .nodes(nodes)
+    .on("tick", ticked);
+  simulation.alphaTarget(.03).restart();
+}
+
+function updateGraph(nodes, links) {
+  updateNodes(nodes);
   edgePaths = svg.selectAll(".edgePath")
     .data(links)
 
@@ -131,36 +191,6 @@ function update(nodes, links) {
     .style("text-anchor", "middle")
     .text(d => d.input);
 
-  node = svg.selectAll(".node")
-    .data(nodes);
-
-  node.selectAll('circle')
-    .classed("highlight", d => d.curState)
-    .classed("endState", d => d.endState);
-
-  const nodeEnter = node.enter()
-    .append("g")
-    .attr("class", "node")
-    .call(d3.drag()
-      .on("start", dragstarted)
-      .on("drag", dragged)
-      .on("end", dragended)
-    );
-
-  nodeEnter.append("circle")
-    .attr("r", (d => 5 + RADIUS_SCALE_FACTOR*d.data.length))
-    .classed("highlight", true)
-    .style("fill", (d, i) => colors(i));
-
-  nodeEnter.append("text")
-    .attrs({
-      'dx': d => d.data.length*CHAR_OFFSET,
-      'fill': '#000',
-      'font-size': 14,
-      'stroke': 'none'
-    })
-    .text(d => d.data);
-
   link = svg.selectAll(".link")
     .data(links);
 
@@ -174,28 +204,44 @@ function update(nodes, links) {
   linkEnter.append("title")
     .text(d => d.input);
 
-  node = nodeEnter.merge(node);
   link = linkEnter.merge(link);
   edgePaths = edgePathsEnter.merge(edgePaths);
   edgeLabels = edgeLabelsEnter.merge(edgeLabels);
-
-  simulation
-    .nodes(nodes)
-    .on("tick", ticked);
 
   simulation.force("link")
     .links(links);
 }
 
 function ticked() {
-  link
-    .attr("x1", d => _offset(d.input, d.source.x))
-    .attr("y1", d => _offset(d.input, d.source.y))
-    .attr("x2", d => _offset(d.input, d.target.x))
-    .attr("y2", d => _offset(d.input, d.target.y))
+  console.log("ticked");
+  node
+    .attr("transform", d => "translate("
+      + Math.max(WINDOW_PADDING, Math.min(window.innerWidth-WINDOW_PADDING, d.x)) + ", "
+      + Math.max(WINDOW_PADDING, Math.min(window.innerHeight*WINDOW_VERTICAL_PERCENTAGE_USED-WINDOW_PADDING,
+        d.y)) + ")");
 
-    node
-      .attr("transform", d => "translate(" + d.x + ", " + d.y + ")");
+  // if (link && edgePaths) {
+  //   const attrs = [['x1', 'source', 'x'], ['x2', 'source', 'x'], ['y1', 'target', 'y'], ['y2', 'target', 'y']];
+  //
+  //   for (const attr of attrs) {
+  //     link.attr(attr[0], d => {
+  //         const newPos = _offset(d.input, d[attr[1]][attr[2]])
+  //
+  //         if (newPos > (attr[2] === 'x' ? window.innerWidth : window.innerHeight)) {
+  //             return attr[2] === 'x' ? window.innerWidth : window.innerHeight;
+  //         } else if (newPos < 0) {
+  //           return 0;
+  //         } else {
+  //           return newPos;
+  //         }
+  //     })
+  //   }
+
+    link
+      .attr("x1", d => _offset(d.input, d.source.x))
+      .attr("y1", d => _offset(d.input, d.source.y))
+      .attr("x2", d => _offset(d.input, d.target.x))
+      .attr("y2", d => _offset(d.input, d.target.y));
 
     edgePaths.attr('d', d => 'M ' + _offset(d.input, d.source.x) + ' ' + _offset(d.input, d.source.y)
       + ' L ' + _offset(d.input, d.target.x) + ' ' + _offset(d.input, d.target.y));
@@ -220,40 +266,12 @@ function dragended() {
   d3.event.subject.fy = null;
 }
 
-function addChar(keyName) {
-  const toSearch = curNodeID === 0 ? keyName : graph.nodes[curNodeID].data + keyName;
-  const searchRes = _search(toSearch);
-
-  if (searchRes) {
-    setCurState(searchRes);
-  } else {
-    graph.nodes.push({
-        "data": toSearch,
-        "curState": true,
-        "endState": false,
-        "id": graph.nodes.length
-    });
-
-    graph.edges.push({
-      "source": graph.nodes[curNodeID],
-      "target": graph.nodes[graph.nodes.length-1],
-      "input": keyName
-    });
-    graph.edges.push({
-      "source": graph.nodes[graph.nodes.length-1],
-      "target": graph.nodes[curNodeID],
-      "input": PREV_STATE
-    });
-
-    setCurState(graph.nodes.length-1);
-  }
-}
 
 function setCurState(newID) {
   graph.nodes[curNodeID].curState = false;
   curNodeID = newID;
   graph.nodes[curNodeID].curState = true;
-  update(graph.nodes, graph.edges);
+  updateGraph(graph.nodes, graph.edges);
 }
 
 function setEndState() {
@@ -271,6 +289,10 @@ function prevState() {
   setCurState(toSearch ? _search(toSearch) : 0);
 }
 
+const _generateNodeSize = nodeText => {
+  return (8+Math.random()*10) + RADIUS_SCALE_FACTOR*nodeText.length
+}
+
 const _offset = (input, x) => input === PREV_STATE ? x + LINE_OFFSET : x - LINE_OFFSET;
 
 const _search = (s) => {
@@ -285,20 +307,7 @@ const _search = (s) => {
 window.addEventListener('resize', () => {
   simulation.force('center')
     .x(window.innerWidth / 2)
-    .y(window.innerHeight / 2);
+    .y(window.innerHeight*WINDOW_VERTICAL_PERCENTAGE_USED / 2);
 
   simulation.alpha(0.3).restart();
-});
-
-window.addEventListener('keydown', event => {
-  const keyName = event.key;
-  const keyCode = event.keyCode;
-
-  if (65 <= keyCode && keyCode <= 90) {
-    addChar(keyName);
-  } else if (keyCode === 13) {
-    setEndState();
-  } else if (keyCode === 8) {
-    prevState();
-  }
 });
