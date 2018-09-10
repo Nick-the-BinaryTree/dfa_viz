@@ -1,4 +1,5 @@
 html {
+  font-family: 'Dosis', sans-serif;
   overflow: hidden;
   user-select: none;
 }
@@ -26,4 +27,12 @@ svg {
 .node {
   stroke: #fff;
   stroke-width: 1px;
+}
+
+#addEdgesPromptContainer {
+  display: none;
+}
+
+#setNodeCountButton {
+  margin-left: 4px;
 }
