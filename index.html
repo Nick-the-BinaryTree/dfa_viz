@@ -13,15 +13,24 @@
   <svg></svg>
   <div id="inputContainer">
     <div id="nodeCountPromptContainer">
-      Generate <select id="nodeCountDropdown"></select> nodes.
-      <input id="setNodeCountButton" type="button" value="Done"></input>
+      <div class="inlineUI" id="nodeDropdownText">Generate nodes: </div>
+      <select class="clickableNextToText" id="nodeCountDropdown"></select>
+      <div class="inlineUI" id="languageSizeDropdownText">Size of Language: </div>
+      <select class="clickableNextToText" id="languageSizeDropdown">
+          <option value="1">A</option>
+          <option value="2">A-B</option>
+          <option value="3">A-C</option>
+          <option value="4">A-D</option>
+          <option value="5">A-E</option>
+      </select>
+      <input class="clickableNextToText" id="submitNodeCountAndLangSizeButton" type="button" value="Done"></input>
     </div>
     <div id="addEdgesPromptContainer">
-      Add edge from <select id="nodeSourceDropdown"></select> to <select id="nodeTargetDropdown"></select>.
-      Set end state? <input id="setEndStateCheckbox" type="checkbox"></input>
-      Edge value: <input id="edgeValueTextInput" type="text" maxlength="20" placeholder="A"></input>
-      <br>
-      (Set edge value to "_DEL" to delete existing edge)
+      Change edge from <select class="clickableNextToText nodeDropdown" id="nodeSourceDropdown"></select>
+      with value <select class="clickableNextToText" id="languageValueDropdown"></select>
+      to <select class="clickableNextToText nodeDropdown" id="nodeTargetDropdown"></select>.
+      <input class="clickableNextToText" id="submitEdgeChange" type="button" value="Submit"></input>
+      Toggle end states <select class="clickableNextToText nodeDropdown" id="nodeEndStateDropdown"></select>
     </div>
   </div>
 

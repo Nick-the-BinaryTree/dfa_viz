@@ -5,7 +5,7 @@ function initSim() {
     .attrs({
       'id':'arrowhead',
       'viewBox':'-0 -5 10 10',
-      'refX':13,
+      'refX':0,
       'refY':0,
       'orient':'auto',
       'markerWidth':15,
@@ -14,27 +14,26 @@ function initSim() {
       })
     .append('svg:path')
     .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
-    .attr('fill', '#93ff9c6c')
-    .style('stroke','none');
+    .attr('fill', '#0000004C')
 
   simulation = d3.forceSimulation()
     .force('link', d3.forceLink().id(d => d.id).distance(200))
     .force('charge', d3.forceManyBody().strength(-200))
     .force('center', d3.forceCenter(window.innerWidth/2, window.innerHeight/2));
 
-  updateNodes(graph.nodes);
+  updateNodes();
 }
 
-function updateNodes(nodes, isInitialSet=false) {
+function updateNodes(isInitialSet=false) {
   if (isInitialSet) {
     svg.selectAll('.node').remove();
   }
 
+  nodes = graph.nodes;
   node = svg.selectAll('.node')
     .data(nodes);
 
   node.selectAll('circle')
-    .classed('highlight', d => d.curState)
     .classed('endState', d => d.endState);
 
   const nodeEnter = node.enter()
@@ -68,8 +67,14 @@ function updateNodes(nodes, isInitialSet=false) {
   simulation.alphaTarget(.03).restart();
 }
 
-function updateGraph(nodes, links) {
-  updateNodes(nodes);
+function updateEdges(clearPrev=false) {
+  if (clearPrev) {
+    svg.selectAll('.edgePath').remove();
+    svg.selectAll('.link').remove();
+  }
+
+  links = graph.edges;
+
   edgePaths = svg.selectAll('.edgePath')
     .data(links)
 
@@ -103,7 +108,7 @@ function updateGraph(nodes, links) {
     })
     .style('pointer-events', 'none')
     .style('text-anchor', 'middle')
-    .text(d => d.input);
+    .text(d => d.input); //TODO
 
   link = svg.selectAll('.link')
     .data(links);
@@ -124,6 +129,12 @@ function updateGraph(nodes, links) {
 
   simulation.force('link')
     .links(links);
+  simulation.alphaTarget(.03).restart();
+}
+
+function updateGraph() {
+  updateNodes();
+  updateEdges();
 }
 
 function ticked() {
@@ -135,13 +146,13 @@ function ticked() {
 
   if (link != null && edgePaths != null) {
     link
-      .attr('x1', d => _offset(d.input, d.source.x))
-      .attr('y1', d => _offset(d.input, d.source.y))
-      .attr('x2', d => _offset(d.input, d.target.x))
-      .attr('y2', d => _offset(d.input, d.target.y));
+      .attr('x1', d => _offset(d.source.id, d.target.id, d.source.x))
+      .attr('y1', d => _offset(d.source.id, d.target.id, d.source.y))
+      .attr('x2', d => _offset(d.source.id, d.target.id, d.target.x))
+      .attr('y2', d => _offset(d.source.id, d.target.id, d.target.y));
 
-    edgePaths.attr('d', d => 'M ' + _offset(d.input, d.source.x) + ' ' + _offset(d.input, d.source.y)
-      + ' L ' + _offset(d.input, d.target.x) + ' ' + _offset(d.input, d.target.y));
+    edgePaths.attr('d', d => 'M ' + _offset(d.source.id, d.target.id, d.source.x) + ' ' + _offset(d.source.id, d.target.id, d.source.y)
+      + ' L ' + _offset(d.source.id, d.target.id, d.target.x) + ' ' + _offset(d.source.id, d.target.id, d.target.y));
   }
 }
 
@@ -172,13 +183,13 @@ const _generateNodeSize = nodeText => {
   return (8+Math.random()*10) + RADIUS_SCALE_FACTOR*nodeText.length
 }
 
-const _offset = (input, x) => input === PREV_STATE ? x + LINE_OFFSET : x - LINE_OFFSET;
+const _offset = (src, tar, x) => graph.nodes[src].incomingNodes[tar] === 2 ? x + LINE_OFFSET : x - LINE_OFFSET;
 
-const _search = (s) => {
-  for (let node of graph.nodes) {
-    if (node.data === s) {
-      return node.id;
+const _searchSrcTar = (src, tar) => {
+  for (let i=0; i < graph.edges.length; i++) {
+    if (graph.edges[i].source === src && graph.edges[i].target === tar) {
+      return i;
     }
   }
-  return null;
+  return false;
 }

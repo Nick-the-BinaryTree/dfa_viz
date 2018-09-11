@@ -9,6 +9,15 @@ svg {
   height: 90%;
 }
 
+.clickableNextToText {
+  margin-left: 4px;
+  margin-right: 4px;
+}
+
+.inlineUI {
+  display: inline-block;
+}
+
 .highlight {
   stroke: yellow;
   stroke-width: 2px;
@@ -20,19 +29,14 @@ svg {
 }
 
 .link {
-  stroke: #93ff9c6c;
+  stroke: #0000004C;
   stroke-width: 1px;
 }
 
 .node {
-  stroke: #fff;
   stroke-width: 1px;
 }
 
 #addEdgesPromptContainer {
   display: none;
-}
-
-#setNodeCountButton {
-  margin-left: 4px;
 }
