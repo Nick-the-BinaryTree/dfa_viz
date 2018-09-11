@@ -140,7 +140,8 @@ function submitEdge() {
 function tryAddToCurEdge(source, input, target) {
   for (let i=0; i < graph.edges.length; i++) {
     const edgeIndex= _searchSrcTar(source, target);
-    if (edgeIndex) {
+
+    if (edgeIndex !== false) {
       graph.edges[edgeIndex].input.push(input);
       graph.nodes[target].incomingNodes[source] = graph.nodes[source].incomingNodes[target] ? 2 : 1;
       return true;

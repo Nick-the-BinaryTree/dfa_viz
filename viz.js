@@ -69,8 +69,7 @@ function updateNodes(isInitialSet=false) {
 
 function updateEdges(clearPrev=false) {
   if (clearPrev) {
-    svg.selectAll('.edgePath').remove();
-    svg.selectAll('.link').remove();
+    svg.selectAll('.edgeLabel,.edgePath,.link').remove();
   }
 
   links = graph.edges;
@@ -108,7 +107,7 @@ function updateEdges(clearPrev=false) {
     })
     .style('pointer-events', 'none')
     .style('text-anchor', 'middle')
-    .text(d => d.input); //TODO
+    .text(d => _arrToStr(d.input));
 
   link = svg.selectAll('.link')
     .data(links);
@@ -121,7 +120,7 @@ function updateEdges(clearPrev=false) {
     })
 
   linkEnter.append('title')
-    .text(d => d.input);
+    .text(d => _arrToStr(d.input));
 
   link = linkEnter.merge(link);
   edgePaths = edgePathsEnter.merge(edgePaths);
@@ -179,6 +178,15 @@ function setEndState() {
   graph.nodes[0].endState = true;
 }
 
+const _arrToStr = arr => {
+  let res = arr[0];
+
+  for (let i=1; i < arr.length; i++) {
+    res += ", " + arr[i];
+  }
+  return res;
+}
+
 const _generateNodeSize = nodeText => {
   return (8+Math.random()*10) + RADIUS_SCALE_FACTOR*nodeText.length
 }
@@ -187,7 +195,7 @@ const _offset = (src, tar, x) => graph.nodes[src].incomingNodes[tar] === 2 ? x +
 
 const _searchSrcTar = (src, tar) => {
   for (let i=0; i < graph.edges.length; i++) {
-    if (graph.edges[i].source === src && graph.edges[i].target === tar) {
+    if (graph.edges[i].source.id === src && graph.edges[i].target.id === tar) {
       return i;
     }
   }
