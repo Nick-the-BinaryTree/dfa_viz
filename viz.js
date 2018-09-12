@@ -80,10 +80,10 @@ function updateEdges(clearPrev=false) {
   const edgePathsEnter = edgePaths.enter()
     .append('path')
     .attrs({
-        'class': 'edgePath',
+        'class': 'edgePath lineStyle',
         'id': (d, i) => 'edgePath' + i,
         'fill-opacity': 0,
-        'stroke-opacity': 0
+        'marker-end': 'url(#arrowhead)'
     })
     .style('pointer-events', 'none');
 
@@ -115,8 +115,7 @@ function updateEdges(clearPrev=false) {
   const linkEnter = link.enter()
     .append('line')
     .attrs({
-      'class': 'link',
-      'marker-end': 'url(#arrowhead)'
+      'class': 'link lineStyle',
     })
 
   linkEnter.append('title')
@@ -144,14 +143,47 @@ function ticked() {
         d.y)) + ')');
 
   if (link != null && edgePaths != null) {
-    link
-      .attr('x1', d => _offset(d.source.id, d.target.id, d.source.x))
-      .attr('y1', d => _offset(d.source.id, d.target.id, d.source.y))
-      .attr('x2', d => _offset(d.source.id, d.target.id, d.target.x))
-      .attr('y2', d => _offset(d.source.id, d.target.id, d.target.y));
+    link.attrs(d => {
+        if (d.source.id === d.target.id) {
+            return {};
+        }
+        const offsetVals = [['x1', 'source', 'x'], ['y1', 'source', 'y'], ['x2', 'target', 'x'], ['y2', 'target', 'y']];
+        return offsetVals.reduce((acc, cur) => {
+          acc[cur[0]] = _offset(d.source.id, d.target.id, d[cur[1]][cur[2]]);
+          return acc;
+        }, {'marker-end': 'url(#arrowhead)'});
+      }
+    );
 
-    edgePaths.attr('d', d => 'M ' + _offset(d.source.id, d.target.id, d.source.x) + ' ' + _offset(d.source.id, d.target.id, d.source.y)
-      + ' L ' + _offset(d.source.id, d.target.id, d.target.x) + ' ' + _offset(d.source.id, d.target.id, d.target.y));
+    edgePaths.attrs(d => {
+      if (d.source.id === d.target.id) {
+        const drx = 30,
+          dry = 25;
+          largeArc = 1,
+          sweep = 1,
+          xRotation = -45,
+          x1 = d.source.x-SELF_CURVE_OFFSET,
+          x2 = d.target.x+SELF_CURVE_OFFSET*2,
+          y1 = d.source.y-SELF_CURVE_OFFSET,
+          y2 = d.target.y+SELF_CURVE_OFFSET*2;
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const dr = Math.sqrt(dx * dx + dy * dy);
+        const curve = ("M" + x1 + "," + y1 + "A" + drx + "," + dry + " " + xRotation + ","
+          + largeArc + "," + sweep + " " + x2 + "," + y2);
+
+        return {
+          'd': curve,
+          'stroke-opacity': 1,
+          'stroke': "#000"
+        }
+      }
+      return {
+        d: 'M ' + _offset(d.source.id, d.target.id, d.source.x) + ' ' + _offset(d.source.id, d.target.id, d.source.y)
+          + ' L ' + _offset(d.source.id, d.target.id, d.target.x) + ' ' + _offset(d.source.id, d.target.id, d.target.y),
+        'stroke-opacity': 0,
+      }
+    });
   }
 }
 

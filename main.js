@@ -2,6 +2,7 @@ const CHAR_OFFSET = -3.5;
 const LANGUAGE = ["A", "B", "C", "D", "E"];
 const LINE_OFFSET = 8;
 const RADIUS_SCALE_FACTOR = 5;
+const SELF_CURVE_OFFSET = 7;
 const WINDOW_PADDING = 30;
 const WINDOW_VERTICAL_PERCENTAGE_USED = .9;
 
