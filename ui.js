@@ -11,6 +11,8 @@ function initLanguageSizeDropdown() {
 
   languageSizeDropdown.onchange = e => {
     languageSize = e.target.value
+
+    setSelfLoops();
   };
 }
 
@@ -20,8 +22,8 @@ function initLanguageValueDropdown() {
   for (let i=0; i < languageSize; i++) {
     const newOption = document.createElement('OPTION');
     const newOptionText = document.createTextNode(LANGUAGE[i]);
-    newOption.appendChild(newOptionText);
 
+    newOption.appendChild(newOptionText);
     dropdown.appendChild(newOption);
   }
 }
@@ -32,8 +34,8 @@ function initNodeCountDropdown() {
   for (let i=1; i <= 100; i++) {
     const newOption = document.createElement('OPTION');
     const newOptionText = document.createTextNode(i);
-    newOption.appendChild(newOptionText);
 
+    newOption.appendChild(newOptionText);
     countDropdown.appendChild(newOption);
   }
 
@@ -73,7 +75,8 @@ const submitButton = document.getElementById('submitEdgeChange');
 }
 
 function changeNodeCount(newCount) {
-  newNodes = [];
+  const newNodes = [];
+  const newEdges = [];
 
   for (let i=0; i<newCount.target.value; i++) {
     newNodes.push({
@@ -84,7 +87,9 @@ function changeNodeCount(newCount) {
   }
 
   graph.nodes = newNodes;
+
   updateNodes(true);
+  setSelfLoops();
 }
 
 function removeCurEdge(source, input) {
@@ -111,6 +116,26 @@ function removeCurEdge(source, input) {
       break;
     }
   }
+}
+
+function setSelfLoops() {
+  const alphabet = [];
+  const newEdges = [];
+
+  for (let i=0; i < languageSize; i++) {
+    alphabet.push(LANGUAGE[i]);
+  }
+
+  for (let i=0; i<graph.nodes.length; i++) {
+    newEdges.push({
+      "source": i,
+      "target": i,
+      "input": alphabet
+    });
+  }
+  graph.edges = newEdges;
+
+  updateEdges(true);
 }
 
 function submitNodeCountAndLangSize() {

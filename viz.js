@@ -21,7 +21,7 @@ function initSim() {
     .force('charge', d3.forceManyBody().strength(-200))
     .force('center', d3.forceCenter(window.innerWidth/2, window.innerHeight/2));
 
-  updateNodes();
+  updateGraph();
 }
 
 function updateNodes(isInitialSet=false) {
@@ -137,10 +137,7 @@ function updateGraph() {
 
 function ticked() {
   node
-    .attr('transform', d => 'translate('
-      + Math.max(WINDOW_PADDING, Math.min(window.innerWidth-WINDOW_PADDING, d.x)) + ', '
-      + Math.max(WINDOW_PADDING, Math.min(window.innerHeight*WINDOW_VERTICAL_PERCENTAGE_USED-WINDOW_PADDING,
-        d.y)) + ')');
+    .attr('transform', d => 'translate(' + _borderX(d.x) + ', ' + _borderY(d.y) + ')');
 
   if (link != null && edgePaths != null) {
     link.attrs(d => {
@@ -169,8 +166,8 @@ function ticked() {
         const dx = x2 - x1;
         const dy = y2 - y1;
         const dr = Math.sqrt(dx * dx + dy * dy);
-        const curve = ("M" + x1 + "," + y1 + "A" + drx + "," + dry + " " + xRotation + ","
-          + largeArc + "," + sweep + " " + x2 + "," + y2);
+        const curve = ("M" + _borderX(x1) + "," + _borderY(y1) + "A" + drx + "," + dry + " "
+          + xRotation + "," + largeArc + "," + sweep + " " + _borderX(x2) + "," + _borderY(y2));
 
         return {
           'd': curve,
@@ -217,6 +214,15 @@ const _arrToStr = arr => {
     res += ", " + arr[i];
   }
   return res;
+}
+
+const _borderX = x => {
+  return Math.max(WINDOW_PADDING, Math.min(window.innerWidth-WINDOW_PADDING, x));
+}
+
+const _borderY = y => {
+  return Math.max(WINDOW_PADDING,
+    Math.min(window.innerHeight*WINDOW_VERTICAL_PERCENTAGE_USED-WINDOW_PADDING, y));
 }
 
 const _generateNodeSize = nodeText => {

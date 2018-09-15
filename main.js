@@ -20,11 +20,11 @@ const graph = {
     },
   ],
   edges: [
-    // {
-    //   "source": 0,
-    //   "target": 1,
-    //   "input": [A],
-    // },
+    {
+      "source": 0,
+      "target": 0,
+      "input": ['A'],
+    },
     // {
     //   "source": 1,
     //   "target": 2,
