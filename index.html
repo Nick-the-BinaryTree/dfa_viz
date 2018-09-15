@@ -23,6 +23,8 @@
           <option value="4">A-D</option>
           <option value="5">A-E</option>
       </select>
+      Or just paste a 2D array here:
+      <input class="clickableNextToText" id="graphTextInput" placeholder="[[null,&quot;A&quot;,&quot;B&quot;],[0,0,1],[&quot;1*&quot;,1,1]]" type="text"></input>
       <input class="clickableNextToText" id="submitNodeCountAndLangSizeButton" type="button" value="Done"></input>
     </div>
     <div id="addEdgesPromptContainer">
@@ -31,6 +33,7 @@
       to <select class="clickableNextToText nodeDropdown" id="nodeTargetDropdown"></select>.
       <input class="clickableNextToText" id="submitEdgeChange" type="button" value="Submit"></input>
       Toggle end states <select class="clickableNextToText nodeDropdown" id="nodeEndStateDropdown"></select>
+      <input class="clickableNextToText" id="exportButton" type="button" value="Copy DFA to Clipboard"></input>
     </div>
   </div>
 

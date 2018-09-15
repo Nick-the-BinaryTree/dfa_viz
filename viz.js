@@ -24,8 +24,8 @@ function initSim() {
   updateGraph();
 }
 
-function updateNodes(isInitialSet=false) {
-  if (isInitialSet) {
+function updateNodes(clearPrev=false) {
+  if (clearPrev) {
     svg.selectAll('.node').remove();
   }
 
@@ -130,9 +130,9 @@ function updateEdges(clearPrev=false) {
   simulation.alphaTarget(.03).restart();
 }
 
-function updateGraph() {
-  updateNodes();
-  updateEdges();
+function updateGraph(clearPrev=false) {
+  updateNodes(clearPrev);
+  updateEdges(clearPrev);
 }
 
 function ticked() {
@@ -230,12 +230,3 @@ const _generateNodeSize = nodeText => {
 }
 
 const _offset = (src, tar, x) => graph.nodes[src].incomingNodes[tar] === 2 ? x + LINE_OFFSET : x - LINE_OFFSET;
-
-const _searchSrcTar = (src, tar) => {
-  for (let i=0; i < graph.edges.length; i++) {
-    if (graph.edges[i].source.id === src && graph.edges[i].target.id === tar) {
-      return i;
-    }
-  }
-  return false;
-}

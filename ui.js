@@ -57,21 +57,36 @@ function initEdgeSelectDropdowns() {
 }
 
 function initEdgeUI() {
-const endStateDropdown = document.getElementById('nodeEndStateDropdown');
-const submitButton = document.getElementById('submitEdgeChange');
+  const container = document.getElementById('addEdgesPromptContainer');
+  const endStateDropdown = document.getElementById('nodeEndStateDropdown');
+  const exportButton = document.getElementById('exportButton');
+  const graphText = document.getElementById('graphTextInput');
+  const submitButton = document.getElementById('submitEdgeChange');
+
+  generateGraphFromText(graphText.value);
 
   initEdgeSelectDropdowns();
   initLanguageValueDropdown();
 
-  document.getElementById('addEdgesPromptContainer')
-    .style.display='block';
+  container.style.display='block';
 
   endStateDropdown.onchange = updateEndState;
   endStateDropdown.onfocus = () => {
     endStateDropdown.selectedIndex = -1;
     endStateDropdown.blur();
   };
+
+  exportButton.onclick = exportGraph;
   submitButton.onclick = submitEdge;
+}
+
+function addEdge(graphObj, source, input, target) {
+  // Look for pre-existing edge between source and target
+  if (!tryAddToCurEdge(graphObj, source, input, target)) {
+    // If not push new
+    graphObj.edges.push({source: source, target: target, input: [input]});
+    graphObj.nodes[target].incomingNodes[source] = graphObj.nodes[source].incomingNodes[target] ? 2 : 1;
+  };
 }
 
 function changeNodeCount(newCount) {
@@ -90,6 +105,88 @@ function changeNodeCount(newCount) {
 
   updateNodes(true);
   setSelfLoops();
+}
+
+function exportGraph() {
+  const res = [];
+  let langRow = [null];
+
+  // first row
+  for (let i=0; i<languageSize; i++) {
+    langRow.push(LANGUAGE[i])
+  }
+  res.push(langRow);
+
+  // init node rows
+  for (let i=0; i<graph.nodes.length; i++) {
+    const nodeEdges = Array(langRow.length).fill(-1);
+
+    nodeEdges[0] = i;
+
+    res.push(nodeEdges);
+  }
+
+  // add edges
+  for (const edge of graph.edges) {
+    const srcIndex = parseInt(edge.source.id) + 1;
+    const target = parseInt(edge.target.id);
+    const inputsToMark = edge.input.map(x => langRow.indexOf(x));
+
+    for (const inputIndex of inputsToMark) {
+      res[srcIndex][inputIndex] = target;
+    }
+  }
+
+  // mark ending nodes (must be done after edge creation)
+  for (let i=0; i<graph.nodes.length; i++) {
+    if (graph.nodes[i].endState) {
+      res[i+1][0] = res[i+1][0] + '*';
+    }
+  }
+
+  _copyToClipboard(JSON.stringify(res));
+}
+
+function generateGraphFromText(text) {
+  if (!text) {
+    return;
+  }
+  const oldGraph = JSON.stringify(graph);
+  const oldLanguageSize = languageSize;
+
+  try {
+    const newGraphArr = JSON.parse(text);
+    const langRow = newGraphArr[0];
+    const res = {nodes: [], edges: []};
+
+    // get language
+    languageSize = langRow.length-1;
+
+    // get nodes
+    for (let i=1; i<newGraphArr.length; i++) {
+      res.nodes.push({
+        "id": ''+(i-1),
+        incomingNodes: {},
+        endState: (''+newGraphArr[i][0]).length === 2
+      });
+    }
+
+    // get edges
+    for (let row=1; row<newGraphArr.length; row++) {
+      for (let col=1; col<langRow.length; col++) {
+        addEdge(res, ''+(row-1), langRow[col], ''+(newGraphArr[row][col]));
+      }
+    }
+
+    console.log(res)
+    graph = res;
+    updateGraph(true);
+  } catch(e) {
+    graph = JSON.parse(oldGraph);
+    languageSize = oldLanguageSize;
+    alert("Error with graph text input");
+    return;
+  }
 }
 
 function removeCurEdge(source, input) {
@@ -130,7 +227,7 @@ function setSelfLoops() {
     newEdges.push({
       "source": i,
       "target": i,
-      "input": alphabet
+      "input": alphabet.slice()
     });
   }
   graph.edges = newEdges;
@@ -151,24 +248,20 @@ function submitEdge() {
 
   // Find where input currently goes for source and remove
   removeCurEdge(source, input);
-
-  // Look for pre-existing edge between source and target
-  if (!tryAddToCurEdge(source, input, target)) {
-    // If not push new
-    graph.edges.push({source: source, target: target, input: [input]});
-    graph.nodes[target].incomingNodes[source] = graph.nodes[source].incomingNodes[target] ? 2 : 1;
-  };
+  // try to add to existing or just add new
+  addEdge(graph, source, input, target);
 
   updateEdges(true);
 }
 
-function tryAddToCurEdge(source, input, target) {
-  for (let i=0; i < graph.edges.length; i++) {
-    const edgeIndex= _searchSrcTar(source, target);
+function tryAddToCurEdge(graphObj, source, input, target) {
+  for (let i=0; i < graphObj.edges.length; i++) {
+    const edgeIndex= _searchSrcTar(graphObj, source, target);
 
     if (edgeIndex !== false) {
-      graph.edges[edgeIndex].input.push(input);
-      graph.nodes[target].incomingNodes[source] = graph.nodes[source].incomingNodes[target] ? 2 : 1;
+      graphObj.edges[edgeIndex].input.push(input);
+      graphObj.nodes[target].incomingNodes[source] = graphObj.nodes[source].incomingNodes[target] ? 2 : 1;
+
       return true;
     }
   }
@@ -190,3 +283,27 @@ window.addEventListener('resize', () => {
 
   simulation.alpha(0.3).restart();
 });
+
+// credits: https://hackernoon.com/copying-text-to-clipboard-with-javascript-df4d4988697f
+const _copyToClipboard = str => {
+  const el = document.createElement('textarea');
+  el.value = str;
+  el.setAttribute('readonly', '');
+  el.style.position = 'absolute';
+  el.style.left = '-9999px';
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+};
+
+const _searchSrcTar = (graphObj, src, tar) => {
+  for (let i=0; i < graphObj.edges.length; i++) {
+    // source/target will be an object w/ id after graph inits but just string before
+    if (graphObj.edges[i].source.id === src && graphObj.edges[i].target.id === tar
+      || graphObj.edges[i].source === src && graphObj.edges[i].target === tar) {
+      return i;
+    }
+  }
+  return false;
+}

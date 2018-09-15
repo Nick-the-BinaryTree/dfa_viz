@@ -11,7 +11,7 @@ const colors = d3.scaleOrdinal(d3.schemeCategory20c);
 let languageSize = 1
 let edgeLabels, edgePaths, link, node, simulation, svg;
 
-const graph = {
+let graph = {
   nodes: [
     {
       "id": "0",
