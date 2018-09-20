@@ -169,7 +169,7 @@ function generateGraphFromText(text) {
     // get nodes
     for (let i=1; i<newGraphArr.length; i++) {
       res.nodes.push({
-        "id": ''+(i-1),
+        'id': ''+(i-1),
         incomingNodes: {},
         endState: (''+newGraphArr[i][0]).length === 2
       });
@@ -187,7 +187,7 @@ function generateGraphFromText(text) {
   } catch(e) {
     graph = JSON.parse(oldGraph);
     languageSize = oldLanguageSize;
-    alert("Error with graph text input " + text);
+    alert('Error with graph text input ' + text);
     return;
   }
 }
@@ -229,9 +229,9 @@ function setSelfLoops() {
 
   for (let i=0; i<graph.nodes.length; i++) {
     newEdges.push({
-      "source": i,
-      "target": i,
-      "input": alphabet.slice()
+      'source': i,
+      'target': i,
+      'input': alphabet.slice()
     });
   }
   graph.edges = newEdges;

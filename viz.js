@@ -1,20 +1,31 @@
 function initSim() {
-  svg = d3.select('svg'),
+  const arrowheadAttrs1A = {
+    'id':'arrowheadA',
+    'markerWidth':15,
+    'markerHeight':15,
+    'refX': 0,
+    'refY': 0,
+    'orient':'auto',
+    'viewBox':'-0 -5 10 10',
+    'xoverflow':'visible'
+  };
+  const arrowheadAttrs1B = Object.assign({}, arrowheadAttrs1A,
+    {'id': 'arrowheadB', refX: -25});
+  const arrowheadAttrs2 = {
+    'd': 'M 0,-5 L 10 ,0 L 0,5',
+    'fill': '#0000004C'
+  };
+
+  svg = d3.select('svg');
 
   svg.append('defs').append('marker')
-    .attrs({
-      'id':'arrowhead',
-      'viewBox':'-0 -5 10 10',
-      'refX': 0,
-      'refY':0,
-      'orient':'auto',
-      'markerWidth':15,
-      'markerHeight':15,
-      'xoverflow':'visible'
-      })
+    .attrs(arrowheadAttrs1A)
     .append('svg:path')
-    .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
-    .attr('fill', '#0000004C')
+    .attrs(arrowheadAttrs2);
+    svg.append('defs').append('marker')
+      .attrs(arrowheadAttrs1B)
+      .append('svg:path')
+      .attrs(arrowheadAttrs2);
 
   simulation = d3.forceSimulation()
     .force('link', d3.forceLink().id(d => d.id).distance(200))
@@ -83,8 +94,7 @@ function updateEdges(clearPrev=false) {
     .attrs({
         'class': 'edgePath lineStyle',
         'id': (d, i) => 'edgePath' + i,
-        'fill-opacity': 0,
-        'marker-end': 'url(#arrowhead)'
+        'fill-opacity': 0
     })
     .style('pointer-events', 'none');
 
@@ -114,7 +124,7 @@ function updateEdges(clearPrev=false) {
     .data(links);
 
   const linkEnter = link.enter()
-    .append('line')
+    .append('polyline')
     .attrs({
       'class': 'link lineStyle',
     })
@@ -139,19 +149,27 @@ function updateGraph(clearPrev=false) {
 function ticked() {
   node
     .attr('transform', d => 'translate(' + _borderX(d.x) + ', ' + _borderY(d.y) + ')');
+  // node
+  //   .attr("cx", d => _borderX(d.x) })
+  //   .attr("cy", d => _borderX(d.x) });
 
   if (link != null && edgePaths != null) {
     link.attrs(d => {
         if (d.source.id === d.target.id) {
             return {};
         }
-        const offsetVals = [['x1', 'source', 'x'], ['y1', 'source', 'y'], ['x2', 'target', 'x'], ['y2', 'target', 'y']];
-        return offsetVals.reduce((acc, cur) => {
-          acc[cur[0]] = _offset(d.source.id, d.target.id, d[cur[1]][cur[2]]);
-          return acc;
-        }, {'marker-end': 'url(#arrowhead)'});
-      }
-    );
+        // const offsetVals = [['x1', 'source', 'x'], ['y1', 'source', 'y'], ['x2', 'target', 'x'], ['y2', 'target', 'y']];
+        // return offsetVals.reduce((acc, cur) => {
+        //   acc[cur[0]] = _offset(d.source.id, d.target.id, d[cur[1]][cur[2]]);
+        //   return acc;
+        // }, {});
+        return {
+          'points': d.source.x + "," + d.source.y + " " +
+               (d.source.x + d.target.x)/2 + "," + (d.source.y + d.target.y)/2 + " " +
+               d.target.x + "," + d.target.y,
+          'marker-mid': 'url(#arrowheadB)'
+        };
+    });
 
     edgePaths.attrs(d => {
       if (d.source.id === d.target.id) {
@@ -167,13 +185,14 @@ function ticked() {
         const dx = x2 - x1;
         const dy = y2 - y1;
         const dr = Math.sqrt(dx * dx + dy * dy);
-        const curve = ("M" + _borderX(x1) + "," + _borderY(y1) + "A" + drx + "," + dry + " "
-          + xRotation + "," + largeArc + "," + sweep + " " + _borderX(x2) + "," + _borderY(y2));
+        const curve = ('M' + _borderX(x1) + ',' + _borderY(y1) + 'A' + drx + ',' + dry + ' '
+          + xRotation + ',' + largeArc + ',' + sweep + ' ' + _borderX(x2) + ',' + _borderY(y2));
 
         return {
           'd': curve,
+          'marker-end': 'url(#arrowheadA)',
           'stroke-opacity': 1,
-          'stroke': "#000"
+          'stroke': '#000'
         }
       }
       return {
@@ -200,7 +219,7 @@ function dragged(d) {
 
 function dragended() {
   if (!d3.event.active) {
-    simulation.alphaTarget(0);
+    simulation.alphaTarget(0).restart();
   }
   d3.event.subject.fx = null;
   d3.event.subject.fy = null;
@@ -214,7 +233,7 @@ const _arrToStr = arr => {
   let res = arr[0];
 
   for (let i=1; i < arr.length; i++) {
-    res += ", " + arr[i];
+    res += ', ' + arr[i];
   }
   return res;
 }
