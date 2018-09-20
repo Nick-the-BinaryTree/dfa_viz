@@ -1,3 +1,3 @@
 # FSA String Viz
 
-Visualization of finite state automata processing string, minimizing, and checking for graph isomorphism w/ a similar automata.
+Visualization and construction tool for finite state automata. Currently geared to work with DFAs only (deterministic finite state automata).
