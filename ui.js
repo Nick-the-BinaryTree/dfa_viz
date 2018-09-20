@@ -155,6 +155,10 @@ function generateGraphFromText(text) {
   const oldLanguageSize = languageSize;
 
   try {
+    if (text[0] === '"' && text[text.length-1] === '"') {
+      text = text.substring(1, text.length-1);
+    }
+
     const newGraphArr = JSON.parse(text);
     const langRow = newGraphArr[0];
     const res = {nodes: [], edges: []};
@@ -178,13 +182,12 @@ function generateGraphFromText(text) {
       }
     }
 
-    console.log(res)
     graph = res;
     updateGraph(true);
   } catch(e) {
     graph = JSON.parse(oldGraph);
     languageSize = oldLanguageSize;
-    alert("Error with graph text input");
+    alert("Error with graph text input " + text);
     return;
   }
 }
@@ -199,7 +202,8 @@ function removeCurEdge(source, input) {
         if (graph.edges[i].input[j] === input) {
           graph.edges[i].input
           graph.edges[i].input.splice(j, 1);
-          graph.nodes[graph.edges[i].target.id].incomingNodes[source] = false;
+          graph.nodes[graph.edges[i].target.id].incomingNodes[source] = 0;
+          graph.nodes[source].incomingNodes[graph.edges[i].target.id] = graph.nodes[source].incomingNodes[graph.edges[i].target.id] ? 1 : 0;
 
           if (graph.edges[i].input.length === 0) {
             graph.edges.splice(i, 1);

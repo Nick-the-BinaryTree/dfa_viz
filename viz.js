@@ -5,7 +5,7 @@ function initSim() {
     .attrs({
       'id':'arrowhead',
       'viewBox':'-0 -5 10 10',
-      'refX':0,
+      'refX': 0,
       'refY':0,
       'orient':'auto',
       'markerWidth':15,
@@ -18,7 +18,8 @@ function initSim() {
 
   simulation = d3.forceSimulation()
     .force('link', d3.forceLink().id(d => d.id).distance(200))
-    .force('charge', d3.forceManyBody().strength(-200))
+    .force('charge', d3.forceManyBody().strength(-50).distanceMax(100))
+    .force('collisionForce', d3.forceCollide(20).strength(5))
     .force('center', d3.forceCenter(window.innerWidth/2, window.innerHeight/2));
 
   updateGraph();
@@ -198,7 +199,9 @@ function dragged(d) {
 }
 
 function dragended() {
-  if (!d3.event.active) simulation.alphaTarget(0);
+  if (!d3.event.active) {
+    simulation.alphaTarget(0);
+  }
   d3.event.subject.fx = null;
   d3.event.subject.fy = null;
 }
@@ -229,4 +232,11 @@ const _generateNodeSize = nodeText => {
   return (8+Math.random()*10) + RADIUS_SCALE_FACTOR*nodeText.length
 }
 
-const _offset = (src, tar, x) => graph.nodes[src].incomingNodes[tar] === 2 ? x + LINE_OFFSET : x - LINE_OFFSET;
+const _offset = (src, tar, x) => {
+  if (graph.nodes[src].incomingNodes[tar] === 2) {
+    return x + LINE_OFFSET;
+  } else if (graph.nodes[src].incomingNodes[tar] === 1) {
+    return x - LINE_OFFSET;
+  }
+  return x;
+}
