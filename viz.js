@@ -149,24 +149,20 @@ function updateGraph(clearPrev=false) {
 function ticked() {
   node
     .attr('transform', d => 'translate(' + _borderX(d.x) + ', ' + _borderY(d.y) + ')');
-  // node
-  //   .attr("cx", d => _borderX(d.x) })
-  //   .attr("cy", d => _borderX(d.x) });
 
   if (link != null && edgePaths != null) {
     link.attrs(d => {
         if (d.source.id === d.target.id) {
             return {};
         }
-        // const offsetVals = [['x1', 'source', 'x'], ['y1', 'source', 'y'], ['x2', 'target', 'x'], ['y2', 'target', 'y']];
-        // return offsetVals.reduce((acc, cur) => {
-        //   acc[cur[0]] = _offset(d.source.id, d.target.id, d[cur[1]][cur[2]]);
-        //   return acc;
-        // }, {});
+
+        const sX = _offset(d.source.id, d.target.id, d.source.x);
+        const tX = _offset(d.source.id, d.target.id, d.target.x);
+        const sY = _offset(d.source.id, d.target.id, d.source.y);
+        const tY = _offset(d.source.id, d.target.id, d.target.y);
+
         return {
-          'points': d.source.x + "," + d.source.y + " " +
-               (d.source.x + d.target.x)/2 + "," + (d.source.y + d.target.y)/2 + " " +
-               d.target.x + "," + d.target.y,
+          'points': sX + "," + sY + " " + (sX + tX)/2 + "," + (sY + tY)/2 + " " + tX + "," + tY,
           'marker-mid': 'url(#arrowheadB)'
         };
     });
