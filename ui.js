@@ -155,7 +155,8 @@ function generateGraphFromText(text) {
   const oldLanguageSize = languageSize;
 
   try {
-    if (text[0] === '"' && text[text.length-1] === '"') {
+    if ((text[0] === '"' && text[text.length-1] === '"')
+      || (text[0] === "'" && text[text.length-1] === "'")) {
       text = text.substring(1, text.length-1);
     }
 
@@ -181,8 +182,8 @@ function generateGraphFromText(text) {
         addEdge(res, ''+(row-1), langRow[col], ''+(newGraphArr[row][col]));
       }
     }
-
     graph = res;
+
     updateGraph(true);
   } catch(e) {
     graph = JSON.parse(oldGraph);
