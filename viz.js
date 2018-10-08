@@ -59,6 +59,7 @@ function updateNodes(clearPrev=false) {
 
   nodeEnter.append('circle')
     .attr('r', (d => _generateNodeSize(d.id)))
+    .classed('endState', d => d.endState)
     .style('fill', (d, i) => colors(i));
 
   nodeEnter.append('text')
