@@ -169,10 +169,11 @@ function generateGraphFromText(text) {
 
     // get nodes
     for (let i=1; i<newGraphArr.length; i++) {
+      const nodeValStr = '' + newGraphArr[i][0];
       res.nodes.push({
         'id': ''+(i-1),
         incomingNodes: {},
-        endState: (''+newGraphArr[i][0]).length === 2
+        endState: nodeValStr.charAt(nodeValStr.length-1) === '*'
       });
     }
 
