@@ -1,3 +1,4 @@
 # DFA Visualization and Construction Tool
 
-Visualization and construction tool for finite state automata. Currently geared to work with DFAs only (deterministic finite state automata).
+Visualization and construction tool for deterministic finite state automata.
+Download zip, extract folder, and double click "index.html" to run.
