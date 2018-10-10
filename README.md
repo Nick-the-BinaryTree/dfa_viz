@@ -3,4 +3,4 @@
 Visualization and construction tool for deterministic finite state automata.
 Download zip, extract folder, and double click "index.html" to run.
 
-[screenshot](https://i.imgur.com/I3IgB3T.png)
+[screenshot](screenshot.png)
